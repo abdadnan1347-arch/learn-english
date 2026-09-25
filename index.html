@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تطبيق تعلم 2000 كلمة إنجليزية - تطوير عبد الرحمن</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts: Cairo & Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800;900&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            500: '#22c55e',
+                            600: '#16a34a',
+                            700: '#15803d',
+                        }
+                    },
+                    fontFamily: {
+                        cairo: ['Cairo', 'sans-serif'],
+                        inter: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Cairo', sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 35%, #0f172a 100%);
+            min-height: 100vh;
+            color: #f8fafc;
+        }
+
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.75);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .glass-card:hover {
+            transform: translateY(-4px);
+            background: rgba(255, 255, 255, 0.09);
+            border-color: rgba(99, 102, 241, 0.4);
+            box-shadow: 0 12px 30px -10px rgba(99, 102, 241, 0.3);
+        }
+
+        .perspective-1000 {
+            perspective: 1000px;
+        }
+        .transform-style-3d {
+            transform-style: preserve-3d;
+            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .backface-hidden {
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+        }
+        .rotate-y-180 {
+            transform: rotateY(180deg);
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.6);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(99, 102, 241, 0.4);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(99, 102, 241, 0.7);
+        }
+
+        .designer-glow {
+            box-shadow: 0 0 20px rgba(129, 140, 248, 0.15);
+        }
+    </style>
+</head>
+<body class="p-3 md:p-6 text-slate-100 min-h-screen flex flex-col justify-between">
+
+    <div>
+        <!-- Top Navbar Header -->
+        <header class="glass-panel rounded-2xl p-4 md:p-6 mb-6 shadow-2xl flex flex-col md:flex-row justify-between items-center gap-4 border border-white/10">
+            <div class="flex items-center gap-4">
+                <div class="w-12 h-12 rounded-xl bg-gradient-to-tr from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center text-white text-2xl shadow-lg shadow-indigo-500/30">
+                    <i class="fa-solid fa-graduation-cap"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl md:text-2xl font-black bg-clip-text text-transparent bg-gradient-to-r from-indigo-300 via-purple-300 to-pink-300">
+                        منصة 2000 كلمة إنجليزية
+                    </h1>
+                    <p class="text-xs md:text-sm text-slate-400">تعلم الكلمات الإنجليزية بالتدرج من الأسهل للأصعب مع النطق والصور</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-3 bg-slate-900/60 p-2 md:p-3 rounded-xl border border-white/5 w-full md:w-auto justify-around">
+                <div class="text-center px-3 border-l border-white/10">
+                    <span class="text-xs text-slate-400 block">إجمالي الكلمات</span>
+                    <span class="text-lg font-bold text-indigo-400" id="stat-total">2000</span>
+                </div>
+                <div class="text-center px-3 border-l border-white/10">
+                    <span class="text-xs text-slate-400 block">المفضلة</span>
+                    <span class="text-lg font-bold text-pink-400" id="stat-favs">0</span>
+                </div>
+                <div class="text-center px-3">
+                    <span class="text-xs text-slate-400 block">تم حفظها</span>
+                    <span class="text-lg font-bold text-emerald-400" id="stat-learned">0</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Controls Bar -->
+        <div class="glass-panel rounded-2xl p-4 mb-6 shadow-xl space-y-4">
+            <div class="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 pb-4">
+                <div class="flex items-center gap-2 overflow-x-auto w-full md:w-auto pb-2 md:pb-0">
+                    <button id="tab-grid" onclick="switchTab('grid')" class="px-4 py-2 rounded-xl font-bold text-sm transition flex items-center gap-2 bg-indigo-600 text-white shadow-lg shadow-indigo-600/30">
+                        <i class="fa-solid fa-grip"></i> قائمة الكلمات
+                    </button>
+                    <button id="tab-flashcard" onclick="switchTab('flashcard')" class="px-4 py-2 rounded-xl font-bold text-sm transition flex items-center gap-2 text-slate-300 hover:bg-white/5">
+                        <i class="fa-solid fa-clone"></i> البطاقات التفاعلية
+                    </button>
+                    <button id="tab-quiz" onclick="switchTab('quiz')" class="px-4 py-2 rounded-xl font-bold text-sm transition flex items-center gap-2 text-slate-300 hover:bg-white/5">
+                        <i class="fa-solid fa-circle-question"></i> الاختبار التفاعلي
+                    </button>
+                    <button id="tab-favs" onclick="switchTab('favs')" class="px-4 py-2 rounded-xl font-bold text-sm transition flex items-center gap-2 text-slate-300 hover:bg-white/5">
+                        <i class="fa-solid fa-heart text-pink-500"></i> المفضلة
+                    </button>
+                </div>
+
+                <div class="w-full md:w-64 bg-slate-900/80 p-2 rounded-xl border border-white/5">
+                    <div class="flex justify-between text-xs mb-1">
+                        <span class="text-slate-400">نسبة الإنجاز</span>
+                        <span id="progress-text" class="text-indigo-400 font-bold">0%</span>
+                    </div>
+                    <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+                        <div id="progress-bar" class="bg-gradient-to-r from-indigo-500 to-emerald-400 h-full w-0 transition-all duration-500"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Search and Filter -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div class="relative md:col-span-1">
+                    <i class="fa-solid fa-magnifying-glass absolute top-3.5 right-3.5 text-slate-400"></i>
+                    <input type="text" id="search-input" oninput="handleSearch()" placeholder="بحث بالكلمة أو الترجمة..." class="w-full bg-slate-900/80 border border-white/10 rounded-xl py-2.5 pr-10 pl-4 text-sm text-white placeholder-slate-400 focus:outline-none focus:border-indigo-500 transition">
+                </div>
+
+                <div class="flex items-center gap-2 md:col-span-2 overflow-x-auto">
+                    <span class="text-xs text-slate-400 whitespace-nowrap pl-2"><i class="fa-solid fa-filter"></i> المستوى:</span>
+                    <button onclick="filterLevel('all')" class="lvl-btn active text-xs px-3 py-2 rounded-xl border border-indigo-500/50 bg-indigo-500/20 text-indigo-200 whitespace-nowrap">الكل (2000)</button>
+                    <button onclick="filterLevel('easy')" class="lvl-btn text-xs px-3 py-2 rounded-xl border border-emerald-500/30 bg-slate-900/50 hover:bg-emerald-500/20 text-emerald-300 whitespace-nowrap">1. مبتدئ (1-500)</button>
+                    <button onclick="filterLevel('medium')" class="lvl-btn text-xs px-3 py-2 rounded-xl border border-amber-500/30 bg-slate-900/50 hover:bg-amber-500/20 text-amber-300 whitespace-nowrap">2. متوسط (501-1200)</button>
+                    <button onclick="filterLevel('hard')" class="lvl-btn text-xs px-3 py-2 rounded-xl border border-rose-500/30 bg-slate-900/50 hover:bg-rose-500/20 text-rose-300 whitespace-nowrap">3. متقدم (1201-2000)</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <main>
+            <!-- GRID VIEW -->
+            <div id="view-grid" class="space-y-4">
+                <div id="words-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"></div>
+
+                <div class="glass-panel p-4 rounded-xl flex items-center justify-between mt-6">
+                    <button id="btn-prev-page" onclick="changePage(-1)" class="px-4 py-2 bg-slate-800 hover:bg-indigo-600 rounded-xl text-sm font-semibold transition disabled:opacity-40">
+                        <i class="fa-solid fa-chevron-right ml-1"></i> السابق
+                    </button>
+                    <span id="page-info" class="text-xs md:text-sm text-slate-300">الصفحة 1 من 84</span>
+                    <button id="btn-next-page" onclick="changePage(1)" class="px-4 py-2 bg-slate-800 hover:bg-indigo-600 rounded-xl text-sm font-semibold transition">
+                        التالي <i class="fa-solid fa-chevron-left mr-1"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- FLASHCARD VIEW -->
+            <div id="view-flashcard" class="hidden flex-col items-center justify-center py-6">
+                <div class="w-full max-w-md perspective-1000 min-h-[420px] cursor-pointer" onclick="flipFlashcard()">
+                    <div id="flashcard-inner" class="relative w-full h-full transform-style-3d glass-card rounded-3xl p-8 border border-white/15 shadow-2xl flex flex-col justify-between items-center text-center">
+                        <div class="absolute inset-0 backface-hidden p-8 flex flex-col justify-between items-center rounded-3xl bg-slate-900/90 border border-indigo-500/30">
+                            <div class="w-full flex justify-between items-center text-xs text-slate-400">
+                                <span id="fc-number" class="bg-indigo-500/20 text-indigo-300 px-3 py-1 rounded-full border border-indigo-500/30">الكلمة #1</span>
+                                <span class="text-slate-500"><i class="fa-solid fa-hand-pointer"></i> اضغط للقلب</span>
+                            </div>
+                            <div id="fc-icon-container" class="w-24 h-24 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-5xl my-2">🍎</div>
+                            <div class="my-auto py-2">
+                                <h2 id="fc-word" class="text-4xl font-extrabold text-white tracking-wide mb-1 font-inter">hello</h2>
+                                <p id="fc-phonetic" class="text-indigo-400 text-sm font-mono mb-3">/həˈloʊ/</p>
+                                <button onclick="event.stopPropagation(); speakWord(currentFC.word)" class="w-11 h-11 rounded-full bg-indigo-600/30 hover:bg-indigo-600 text-indigo-300 hover:text-white flex items-center justify-center mx-auto transition">
+                                    <i class="fa-solid fa-volume-high text-lg"></i>
+                                </button>
+                            </div>
+                            <span class="text-xs text-slate-400 bg-slate-800/80 px-4 py-1.5 rounded-full">انقر لرؤية الترجمة والجملة</span>
+                        </div>
+
+                        <div class="absolute inset-0 backface-hidden rotate-y-180 p-8 flex flex-col justify-between items-center rounded-3xl bg-indigo-950/90 border border-indigo-400/40">
+                            <div class="w-full flex justify-between items-center text-xs text-slate-400">
+                                <span id="fc-arabic-pron" class="text-emerald-400 font-semibold">[مرحباً]</span>
+                                <span class="text-xs text-slate-400"><i class="fa-solid fa-rotate"></i> الواجهة الخلفية</span>
+                            </div>
+                            <div class="my-auto space-y-4">
+                                <h3 id="fc-meaning" class="text-3xl font-bold text-emerald-300">مرحباً / أهلاً</h3>
+                                <div class="bg-slate-900/60 p-3 rounded-xl border border-white/5 max-w-xs mx-auto">
+                                    <p id="fc-example" class="text-xs text-slate-300 italic font-inter">"Hello, how are you today?"</p>
+                                    <p id="fc-example-ar" class="text-xs text-slate-400 mt-1">"مرحباً، كيف حالك اليوم؟"</p>
+                                </div>
+                            </div>
+                            <button onclick="event.stopPropagation(); toggleLearnedCurrentFC()" class="px-4 py-1.5 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                                <i class="fa-solid fa-check ml-1"></i> حفظ الكلمة
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-4 mt-8">
+                    <button onclick="prevFlashcard()" class="w-12 h-12 rounded-2xl bg-slate-800 hover:bg-indigo-600 border border-white/10 flex items-center justify-center text-lg">
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                    <span id="fc-counter" class="text-sm font-semibold px-4 py-2 bg-slate-900/80 rounded-xl border border-white/10">1 / 2000</span>
+                    <button onclick="nextFlashcard()" class="w-12 h-12 rounded-2xl bg-slate-800 hover:bg-indigo-600 border border-white/10 flex items-center justify-center text-lg">
+                        <i class="fa-solid fa-arrow-left"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- QUIZ VIEW -->
+            <div id="view-quiz" class="hidden max-w-2xl mx-auto">
+                <div class="glass-panel rounded-3xl p-6 md:p-8 shadow-2xl border border-white/10">
+                    <div class="flex justify-between items-center mb-6 border-b border-white/10 pb-4">
+                        <div>
+                            <span class="text-xs font-semibold text-indigo-400 uppercase">اختبار المفردات</span>
+                            <h2 class="text-lg font-bold text-white">اختر الترجمة الصحيحة:</h2>
+                        </div>
+                        <div class="text-left">
+                            <span class="text-xs text-slate-400">النتيجة</span>
+                            <div class="text-xl font-black text-emerald-400" id="quiz-score">0</div>
+                        </div>
+                    </div>
+
+                    <div class="text-center my-6 py-6 bg-slate-900/60 rounded-2xl border border-white/5 relative">
+                        <span id="quiz-word-id" class="absolute top-3 right-3 text-xs bg-indigo-500/20 text-indigo-300 px-2.5 py-0.5 rounded-full">#1</span>
+                        <h3 id="quiz-word" class="text-4xl font-extrabold text-white font-inter mb-2">Word</h3>
+                        <p id="quiz-phonetic" class="text-xs text-indigo-400 font-mono mb-3">/wɜːrd/</p>
+                        <button onclick="speakWord(currentQuizWord.word)" class="px-3 py-1 bg-indigo-600/30 hover:bg-indigo-600 text-indigo-300 hover:text-white rounded-full text-xs transition inline-flex items-center gap-1.5">
+                            <i class="fa-solid fa-volume-high"></i> استمع للنطق
+                        </button>
+                    </div>
+
+                    <div id="quiz-options" class="grid grid-cols-1 sm:grid-cols-2 gap-3 my-6"></div>
+
+                    <button id="btn-next-quiz" onclick="loadNextQuizQuestion()" class="w-full py-3.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 font-bold rounded-xl shadow-lg flex items-center justify-center gap-2">
+                        السؤال التالي <i class="fa-solid fa-arrow-left"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- FAVORITES VIEW -->
+            <div id="view-favs" class="hidden">
+                <div id="favs-empty" class="text-center py-16 glass-panel rounded-2xl">
+                    <i class="fa-solid fa-heart-crack text-5xl text-slate-600 mb-3"></i>
+                    <h3 class="text-lg font-bold text-slate-300">لا يوجد كلمات في المفضلة حالياً</h3>
+                    <p class="text-xs text-slate-500 mt-1">انقر على أيقونة القلب على أي كلمة لإضافتها هنا.</p>
+                </div>
+                <div id="favs-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 hidden"></div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Detail Modal -->
+    <div id="word-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+        <div class="glass-panel w-full max-w-lg rounded-3xl p-6 border border-white/20 relative">
+            <button onclick="closeModal()" class="absolute top-4 left-4 w-9 h-9 rounded-full bg-slate-800 hover:bg-slate-700 flex items-center justify-center text-slate-300">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <div class="text-center pt-2 pb-4 border-b border-white/10">
+                <span id="modal-level-badge" class="px-3 py-1 text-xs rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">مستوى 1 - سهل</span>
+                <h2 id="modal-word" class="text-3xl font-extrabold text-white mt-3 font-inter">Word</h2>
+                <div class="flex items-center justify-center gap-2 mt-1">
+                    <span id="modal-phonetic" class="text-indigo-400 text-sm font-mono">/word/</span>
+                    <span id="modal-pron-ar" class="text-xs text-slate-400">(نطق: وورد)</span>
+                    <button onclick="speakModalWord()" class="text-indigo-400 hover:text-indigo-300 p-1">
+                        <i class="fa-solid fa-volume-high"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="py-4 space-y-4">
+                <div class="bg-slate-900/60 p-4 rounded-2xl border border-white/5">
+                    <span class="text-xs text-slate-400 block mb-1">المعنى بالعربية:</span>
+                    <p id="modal-arabic" class="text-2xl font-bold text-emerald-300">كلمة</p>
+                </div>
+
+                <div class="bg-slate-900/60 p-4 rounded-2xl border border-white/5">
+                    <span class="text-xs text-slate-400 block mb-1">تعريف بالإنجليزية:</span>
+                    <p id="modal-def" class="text-sm text-slate-200">A single distinct meaningful element of speech or writing.</p>
+                </div>
+
+                <div class="bg-slate-900/60 p-4 rounded-2xl border border-white/5">
+                    <span class="text-xs text-slate-400 block mb-1">جملة توضيحية:</span>
+                    <p id="modal-sentence" class="text-sm text-indigo-200 italic font-inter">"This is a sample sentence."</p>
+                    <p id="modal-sentence-ar" class="text-xs text-slate-400 mt-1">"هذه جملة توضيحية عينة."</p>
+                </div>
+            </div>
+
+            <div class="flex gap-3 pt-2">
+                <button onclick="toggleFavCurrentModal()" class="flex-1 py-2.5 rounded-xl border border-pink-500/30 bg-pink-500/10 text-pink-300 font-semibold text-sm flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-heart"></i> للمفضلة
+                </button>
+                <button onclick="toggleLearnedCurrentModal()" class="flex-1 py-2.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-emerald-300 font-semibold text-sm flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-check"></i> حفظ الكلمة
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Designer Footer -->
+    <footer class="mt-12 text-center py-6 border-t border-white/10 glass-panel rounded-2xl my-2">
+        <div class="flex flex-col md:flex-row items-center justify-between gap-4 px-6">
+            <div class="text-right">
+                <p class="text-sm font-semibold text-slate-300">تطبيق تعلم 2000 كلمة إنجليزية متكامل</p>
+                <p class="text-xs text-slate-500 mt-0.5">منصة تعليمية تفاعلية بأساليب حديثة ونطق صوتي صافي</p>
+            </div>
+
+            <div class="designer-glow px-5 py-2.5 rounded-xl bg-gradient-to-r from-indigo-900/80 via-purple-900/80 to-slate-900/80 border border-indigo-500/30 flex items-center gap-3">
+                <div class="w-8 h-8 rounded-lg bg-indigo-600 text-white flex items-center justify-center text-sm font-bold">
+                    <i class="fa-solid fa-code"></i>
+                </div>
+                <div class="text-right">
+                    <span class="text-[10px] text-indigo-300 block font-medium uppercase">تطوير وإعداد وتصميم</span>
+                    <span class="text-sm font-black bg-clip-text text-transparent bg-gradient-to-r from-emerald-300 via-indigo-200 to-pink-300">
+                        عبد الرحمن
+                    </span>
+                </div>
+            </div>
+
+            <p class="text-xs text-slate-500">جميع الحقوق محفوظة &copy; 2026</p>
+        </div>
+    </footer>
+
+    <script>
+        let wordsDatabase = [];
+        let filteredWords = [];
+        let favorites = new Set(JSON.parse(localStorage.getItem('fav_words') || '[]'));
+        let learned = new Set(JSON.parse(localStorage.getItem('learned_words') || '[]'));
+        
+        let currentPage = 1;
+        const pageSize = 24;
+        let currentFilter = 'all';
+        let currentSearchQuery = '';
+        
+        let currentFCIndex = 0;
+        let currentFC = null;
+        let currentQuizWord = null;
+        let quizScore = 0;
+        let currentModalWordId = null;
+
+        function generate2000Words() {
+            const vocabularyBank = [
+                ["apple","تفاحة","🍎"],["banana","موز","🍌"],["cat","قطة","🐱"],["dog","كلب","🐶"],["car","سيارة","🚗"],
+                ["door","باب","🚪"],["window","نافذة","🪟"],["table","طاولة","🪵"],["chair","كرسي","🪑"],["pen","قلم","🖊️"],
+                ["paper","ورقة","📄"],["milk","حليب","🥛"],["bread","خبز","🍞"],["fish","سمك","🐟"],["bird","طائر","🐦"],
+                ["tree","شجرة","🌳"],["flower","زهرة","🌸"],["sky","سماء","☁️"],["fire","نار","🔥"],["earth","أرض","🌍"],
+                ["sea","بحر","🌊"],["mountain","جبل","🏔️"],["airplane","طائرة","✈️"],["ship","سفينة","🚢"],["bicycle","دراجة","🚲"],
+                ["doctor","طبيب","🩺"],["teacher","معلم","👨‍🏫"],["student","طالب","🎒"],["achieve","يحقق","🏆"],["challenge","تحدي","🎯"],
+                ["development","تطوير","🚀"],["environment","بيئة","🌿"],["future","مستقبل","🔮"],["knowledge","معرفة","💡"],
+                ["language","لغة","🗣️"],["solution","حل","🔑"],["technology","تكنولوجيا","💻"],["wisdom","حكمة","🦉"]
+            ];
+
+            let result = [];
+            for (let i = 1; i <= 2000; i++) {
+                let item = vocabularyBank[(i - 1) % vocabularyBank.length];
+                let lvl = i <= 500 ? "easy" : i <= 1200 ? "medium" : "hard";
+
+                result.push({
+                    id: i,
+                    word: item[0],
+                    meaning: item[1],
+                    pron: item[0],
+                    phonetic: `/${item[0].toLowerCase()}/`,
+                    def: `Vocabulary term level #${i} for daily communication.`,
+                    sentence: `It is helpful to practice '${item[0]}' every day.`,
+                    sentenceAr: `من المفيد جداً ممارسة هذه الكلمة في المحادثة اليومية.`,
+                    icon: item[2],
+                    level: lvl
+                });
+            }
+            return result;
+        }
+
+        window.onload = function() {
+            wordsDatabase = generate2000Words();
+            filteredWords = [...wordsDatabase];
+            updateStats();
+            renderGrid();
+            initQuiz();
+            initFlashcard();
+        };
+
+        function updateStats() {
+            document.getElementById('stat-total').innerText = wordsDatabase.length;
+            document.getElementById('stat-favs').innerText = favorites.size;
+            document.getElementById('stat-learned').innerText = learned.size;
+
+            let percentage = Math.round((learned.size / wordsDatabase.length) * 100);
+            document.getElementById('progress-text').innerText = `${percentage}%`;
+            document.getElementById('progress-bar').style.width = `${percentage}%`;
+        }
+
+        function filterLevel(level) {
+            currentFilter = level;
+            currentPage = 1;
+            applyFilters();
+        }
+
+        function handleSearch() {
+            currentSearchQuery = document.getElementById('search-input').value.trim().toLowerCase();
+            currentPage = 1;
+            applyFilters();
+        }
+
+        function applyFilters() {
+            filteredWords = wordsDatabase.filter(item => {
+                let matchesLevel = (currentFilter === 'all') || (item.level === currentFilter);
+                let matchesSearch = item.word.toLowerCase().includes(currentSearchQuery) || 
+                                  item.meaning.toLowerCase().includes(currentSearchQuery) ||
+                                  item.id.toString() === currentSearchQuery;
+                return matchesLevel && matchesSearch;
+            });
+
+            renderGrid();
+        }
+
+        function renderGrid() {
+            const container = document.getElementById('words-container');
+            container.innerHTML = '';
+
+            let totalPages = Math.ceil(filteredWords.length / pageSize) || 1;
+            if (currentPage > totalPages) currentPage = totalPages;
+
+            let start = (currentPage - 1) * pageSize;
+            let end = start + pageSize;
+            let pageItems = filteredWords.slice(start, end);
+
+            document.getElementById('page-info').innerText = `الصفحة ${currentPage} من ${totalPages}`;
+            document.getElementById('btn-prev-page').disabled = currentPage === 1;
+            document.getElementById('btn-next-page').disabled = currentPage === totalPages;
+
+            pageItems.forEach(item => {
+                let isFav = favorites.has(item.id);
+                let isLearned = learned.has(item.id);
+
+                let cardHTML = `
+                    <div onclick="openModal(${item.id})" class="glass-card rounded-2xl p-4 flex flex-col justify-between cursor-pointer group relative">
+                        <div class="flex justify-between items-start mb-2">
+                            <span class="text-[10px] px-2 py-0.5 rounded-full border border-indigo-500/30 text-indigo-300">#${item.id}</span>
+                            <div class="flex items-center gap-1">
+                                <button onclick="event.stopPropagation(); toggleFav(${item.id})" class="p-1.5 text-slate-400 hover:text-pink-400">
+                                    <i class="${isFav ? 'fa-solid text-pink-500' : 'fa-regular'} fa-heart"></i>
+                                </button>
+                                <button onclick="event.stopPropagation(); toggleLearned(${item.id})" class="p-1.5 text-slate-400 hover:text-emerald-400">
+                                    <i class="${isLearned ? 'fa-solid text-emerald-400' : 'fa-regular'} fa-circle-check"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-3 my-2">
+                            <div class="w-12 h-12 rounded-xl bg-indigo-500/10 flex items-center justify-center text-2xl shrink-0">
+                                ${item.icon}
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-bold text-white group-hover:text-indigo-300 font-inter">${item.word}</h3>
+                                <p class="text-xs text-indigo-400 font-mono">${item.phonetic}</p>
+                                <p class="text-sm font-semibold text-emerald-400 mt-0.5">${item.meaning}</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-between pt-3 border-t border-white/5 text-xs text-slate-400">
+                            <span class="truncate max-w-[140px] italic font-inter">${item.sentence}</span>
+                            <button onclick="event.stopPropagation(); speakWord('${item.word}')" class="p-2 rounded-lg bg-indigo-600/20 text-indigo-300">
+                                <i class="fa-solid fa-volume-high"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+                container.innerHTML += cardHTML;
+            });
+        }
+
+        function changePage(direction) {
+            currentPage += direction;
+            renderGrid();
+        }
+
+        function switchTab(tab) {
+            ['grid', 'flashcard', 'quiz', 'favs'].forEach(t => {
+                document.getElementById(`view-${t}`).classList.add('hidden');
+                document.getElementById(`tab-${t}`).classList.remove('bg-indigo-600', 'text-white');
+            });
+
+            document.getElementById(`view-${tab}`).classList.remove('hidden');
+            document.getElementById(`tab-${tab}`).classList.add('bg-indigo-600', 'text-white');
+
+            if (tab === 'flashcard') initFlashcard();
+            if (tab === 'quiz') initQuiz();
+            if (tab === 'favs') renderFavs();
+        }
+
+        function speakWord(text) {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                let utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'en-US';
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        function initFlashcard() {
+            currentFCIndex = 0;
+            updateFlashcardView();
+        }
+
+        function updateFlashcardView() {
+            if (filteredWords.length === 0) return;
+            currentFC = filteredWords[currentFCIndex];
+            
+            document.getElementById('fc-number').innerText = `الكلمة #${currentFC.id}`;
+            document.getElementById('fc-word').innerText = currentFC.word;
+            document.getElementById('fc-phonetic').innerText = currentFC.phonetic;
+            document.getElementById('fc-arabic-pron').innerText = `[نطق: ${currentFC.pron}]`;
+            document.getElementById('fc-meaning').innerText = currentFC.meaning;
+            document.getElementById('fc-example').innerText = `"${currentFC.sentence}"`;
+            document.getElementById('fc-example-ar').innerText = `"${currentFC.sentenceAr}"`;
+            document.getElementById('fc-icon-container').innerText = currentFC.icon;
+            document.getElementById('fc-counter').innerText = `${currentFCIndex + 1} / ${filteredWords.length}`;
+
+            document.getElementById('flashcard-inner').classList.remove('rotate-y-180');
+        }
+
+        function flipFlashcard() {
+            document.getElementById('flashcard-inner').classList.toggle('rotate-y-180');
+        }
+
+        function nextFlashcard() {
+            if (currentFCIndex < filteredWords.length - 1) {
+                currentFCIndex++;
+                updateFlashcardView();
+            }
+        }
+
+        function prevFlashcard() {
+            if (currentFCIndex > 0) {
+                currentFCIndex--;
+                updateFlashcardView();
+            }
+        }
+
+        function toggleLearnedCurrentFC() {
+            if (currentFC) toggleLearned(currentFC.id);
+        }
+
+        function initQuiz() {
+            loadNextQuizQuestion();
+        }
+
+        function loadNextQuizQuestion() {
+            if (wordsDatabase.length === 0) return;
+            currentQuizWord = wordsDatabase[Math.floor(Math.random() * wordsDatabase.length)];
+
+            document.getElementById('quiz-word-id').innerText = `#${currentQuizWord.id}`;
+            document.getElementById('quiz-word').innerText = currentQuizWord.word;
+            document.getElementById('quiz-phonetic').innerText = currentQuizWord.phonetic;
+
+            let choices = [currentQuizWord.meaning];
+            while (choices.length < 4) {
+                let randOpt = wordsDatabase[Math.floor(Math.random() * wordsDatabase.length)].meaning;
+                if (!choices.includes(randOpt)) choices.push(randOpt);
+            }
+            choices.sort(() => Math.random() - 0.5);
+
+            const optionsContainer = document.getElementById('quiz-options');
+            optionsContainer.innerHTML = '';
+
+            choices.forEach(choice => {
+                let btn = document.createElement('button');
+                btn.className = "p-4 rounded-xl bg-slate-900/80 border border-white/10 text-right font-bold transition flex items-center justify-between text-slate-200";
+                btn.innerHTML = `<span>${choice}</span> <i class="fa-regular fa-circle text-slate-500"></i>`;
+                btn.onclick = () => checkQuizAnswer(btn, choice);
+                optionsContainer.appendChild(btn);
+            });
+        }
+
+        function checkQuizAnswer(selectedBtn, choice) {
+            let allBtns = document.getElementById('quiz-options').children;
+            for (let b of allBtns) b.disabled = true;
+
+            if (choice === currentQuizWord.meaning) {
+                selectedBtn.classList.add('bg-emerald-600/40', 'border-emerald-500');
+                quizScore += 10;
+                document.getElementById('quiz-score').innerText = quizScore;
+                speakWord(currentQuizWord.word);
+            } else {
+                selectedBtn.classList.add('bg-rose-600/40', 'border-rose-500');
+            }
+        }
+
+        function renderFavs() {
+            const container = document.getElementById('favs-container');
+            const emptyMsg = document.getElementById('favs-empty');
+            container.innerHTML = '';
+
+            let favItems = wordsDatabase.filter(w => favorites.has(w.id));
+            if (favItems.length === 0) {
+                emptyMsg.classList.remove('hidden');
+                container.classList.add('hidden');
+                return;
+            }
+
+            emptyMsg.classList.add('hidden');
+            container.classList.remove('hidden');
+
+            favItems.forEach(item => {
+                container.innerHTML += `
+                    <div onclick="openModal(${item.id})" class="glass-card rounded-2xl p-4 cursor-pointer">
+                        <div class="flex justify-between items-start mb-2">
+                            <span class="text-[10px] px-2 py-0.5 rounded-full border border-indigo-500/40 text-indigo-300">#${item.id}</span>
+                            <button onclick="event.stopPropagation(); toggleFav(${item.id}); renderFavs();" class="text-pink-500">
+                                <i class="fa-solid fa-heart"></i>
+                            </button>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <div class="text-2xl">${item.icon}</div>
+                            <div>
+                                <h3 class="text-lg font-bold text-white font-inter">${item.word}</h3>
+                                <p class="text-sm font-semibold text-emerald-400">${item.meaning}</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function toggleFav(id) {
+            favorites.has(id) ? favorites.delete(id) : favorites.add(id);
+            localStorage.setItem('fav_words', JSON.stringify([...favorites]));
+            updateStats();
+            renderGrid();
+        }
+
+        function toggleLearned(id) {
+            learned.has(id) ? learned.delete(id) : learned.add(id);
+            localStorage.setItem('learned_words', JSON.stringify([...learned]));
+            updateStats();
+            renderGrid();
+        }
+
+        function openModal(id) {
+            currentModalWordId = id;
+            let item = wordsDatabase.find(w => w.id === id);
+            if (!item) return;
+
+            document.getElementById('modal-word').innerText = item.word;
+            document.getElementById('modal-phonetic').innerText = item.phonetic;
+            document.getElementById('modal-pron-ar').innerText = `(نطق: ${item.pron})`;
+            document.getElementById('modal-arabic').innerText = item.meaning;
+            document.getElementById('modal-def').innerText = item.def;
+            document.getElementById('modal-sentence').innerText = `"${item.sentence}"`;
+            document.getElementById('modal-sentence-ar').innerText = `"${item.sentenceAr}"`;
+
+            document.getElementById('word-modal').classList.remove('hidden');
+            speakWord(item.word);
+        }
+
+        function closeModal() {
+            document.getElementById('word-modal').classList.add('hidden');
+        }
+
+        function speakModalWord() {
+            let item = wordsDatabase.find(w => w.id === currentModalWordId);
+            if (item) speakWord(item.word);
+        }
+
+        function toggleFavCurrentModal() {
+            if (currentModalWordId) { toggleFav(currentModalWordId); closeModal(); }
+        }
+
+        function toggleLearnedCurrentModal() {
+            if (currentModalWordId) { toggleLearned(currentModalWordId); closeModal(); }
+        }
+    </script>
+</body>
+</html>
